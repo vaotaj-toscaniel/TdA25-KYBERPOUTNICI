@@ -18,7 +18,7 @@
         background-color: #0070BB;
         padding: 25px 50px;
         width: 100%;
-        position: fixed;
+        z-index: 100;
     }
     header img{
         height: 15vh;

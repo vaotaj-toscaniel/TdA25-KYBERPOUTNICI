@@ -13,13 +13,9 @@
         box-sizing: border-box;
     }
     footer{
-        background-color: transparent;
+        background-color: white;
         padding: 25px 50px;
-        position: absolute;
         width: 100%;
-        bottom: 0;
-        -webkit-box-shadow: 0px -6px 10px -2px rgba(0,0,0,0.30);
-        -moz-box-shadow: 0px -6px 10px -2px rgba(0,0,0,0.30);
         box-shadow: 0px -6px 10px -2px rgba(0,0,0,0.30);
     }
     footer img{

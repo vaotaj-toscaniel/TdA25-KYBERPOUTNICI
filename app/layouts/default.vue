@@ -4,7 +4,7 @@
         <main>
             <slot />
         </main>
-        <BaseFooter />
+        <!-- <BaseFooter /> -->
     </div>
 </template>
 
@@ -14,9 +14,8 @@
     src: url('Dosis-VariableFont_wght.ttf') format('woff2-variations');
 }
 main{
+    top: calc(15vh + 50px);
     position: absolute;
-    top: calc(15vh + 2 * 40px);
-    padding: 20px 40px;
     font-family: 'Dosis';
 }
 </style>
