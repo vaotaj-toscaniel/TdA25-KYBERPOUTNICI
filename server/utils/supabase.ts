@@ -1,6 +1,11 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
 
-const SUPABASE_URL = "https://your-supabase-url.supabase.co"; // Nahraď svou URL
-const SUPABASE_KEY = "your-anon-key"; // Nahraď svým API klíčem
+dotenv.config();
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabase = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_KEY!
+);
+
+export default supabase;
