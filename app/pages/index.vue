@@ -4,6 +4,7 @@
     <NuxtLink to="/games">
       <button>HRÁT</button>
     </NuxtLink>
+    <BaseFooter></BaseFooter>
   </div>
 </template>
 

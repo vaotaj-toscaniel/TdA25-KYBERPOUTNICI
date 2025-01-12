@@ -27,9 +27,14 @@
       </div>
     </div>
 
-
+    <div class="no-games">
+      <h1>Žádné uložené hry</h1>
+      <img src="/zarivka_thinking_modre.png" alt="Žádné uložené hry" height="100px" style="margin: 10px;">
+      <br>
+      <button>Zahájit novou hru</button>
+    </div>
     <div class="games">
-
+      <!-- Prozatímní, bude se generovat automaticky -->
       <div class="game-card">
         <h1>Název hry</h1>
         <p>Datum vytvoření:</p>
@@ -129,16 +134,16 @@
   background-color: rgb(205, 205, 205);
   width: 100vw;
   margin: 0;
-  padding: 30px;
+  padding: 20px;
 }
 .selection h1{
-  font-size: 50px;
+  font-size: 40px;
   padding: 10px;
 }
 .selection select{
-  width: 300px;
-  height: 75px;
-  font-size: 30px;
+  width: 200px;
+  height: 50px;
+  font-size: 25px;
   cursor: pointer;
   outline: 0;
   border: 0;
@@ -146,7 +151,7 @@
 }
 .selection label{
   font-family: Arial, Helvetica, sans-serif;
-  font-size: 35px;
+  font-size: 30px;
 }
 .filters{
   display: flex;
@@ -158,8 +163,8 @@
   border: none;
   color: white;
   background-color: #0070BB;
-  width: 300px;
-  height: 75px;
+  width: 250px;
+  height: 50px;
   font-size: 25px;
   cursor: pointer;
   display: flex;
@@ -173,39 +178,51 @@
   justify-content: center;
   padding: 25px 75px;
   display: grid; 
-  grid-template-columns: 500px 500px 500px 500px; 
+  grid-template-columns: 300px 300px 300px 300px; 
   /* grid-template-rows: 500px 500px 500px;  */
   gap: 30px 30px; 
 }
 .game-card{
   padding: 30px;
 
-  height: 500px;
-  width: 500px;
+  height: 300px;
+  width: 300px;
   box-shadow: 2px 2px 5px 0px rgba(0,0,0,0.56);
 }
 .game-card h1{
   text-align: center;
-  font-size: 40px;
+  font-size: 30px;
 }
 .game-card p{
-  font-size: 25px;
+  font-size: 20px;
   margin: 5px 0;
 }
 .game-card .icon{
   margin-left: 50%;
   transform: translateX(-50%);
-  padding: 30px;
-  height: 175px;
+  padding: 10px;
+  height: 75px;
 }
 .game-card .play{
   border: none;
   background-color: #E31837;
   color: white;
-  padding: 20px 40px;
+  padding: 10px 20px;
   font-size: 20px;
   cursor: pointer;
   margin-left: 50%;
   transform: translateX(-50%);
+}
+.game-card .play:hover{
+  background-color: #cb1732;
+}
+.no-games{
+  text-align: center;
+  width: 100vw;
+  margin: 0;
+  padding: 20px;
+}
+.no-games h1{
+  margin: 20px;
 }
 </style>

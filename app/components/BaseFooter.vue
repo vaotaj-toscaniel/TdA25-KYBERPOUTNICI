@@ -15,7 +15,7 @@
     footer{
         background-color: white;
         padding: 25px 50px;
-        width: 100%;
+        width: 100vw;
         box-shadow: 0px -6px 10px -2px rgba(0,0,0,0.30);
     }
     footer img{
