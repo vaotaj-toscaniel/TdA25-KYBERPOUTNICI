@@ -34,7 +34,7 @@
 import { useFetch } from '#app'
 export default {
   data() {
-    const { data, error } = await useFetch('https://1e7b95c5.app.deploy.tourde.app/games/')
+    const { data, error } = await useFetch('https://1e7b95c5.app.deploy.tourde.app/game')
     console.log("data her", data);
     if (error.value) {
       console.error('Error fetching data:', error.value)
