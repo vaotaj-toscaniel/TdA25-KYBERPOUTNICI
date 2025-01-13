@@ -41,7 +41,7 @@
         <p>Stav hry:</p>
         <p>Obtížnost:</p>
         <img src="/zarivka_easy_modre.png" alt="icon" class="icon">
-        <NuxtLink to="/games/[id].vue">
+        <NuxtLink to="/games/[id]">
           <button class="play">HRÁT</button>
         </NuxtLink>
       </div>
