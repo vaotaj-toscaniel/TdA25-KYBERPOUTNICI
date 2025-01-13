@@ -31,9 +31,20 @@
 <script>
 // import { supabase } from '../../utils/supabase'; 
 // Momentálně způsobuje error
-
+import { useFetch } from '#app'
 export default {
   data() {
+    const { data, error } = await useFetch('https://api.example.com/data')
+    console.log("data her", data);
+    if (error.value) {
+      console.error('Error fetching data:', error.value)
+    }    
+
+const { data, error } = await useFetch('https://api.example.com/data')
+
+if (error.value) {
+  console.error('Error fetching data:', error.value)
+}
     return {
       boardSize: 15,
       currentPlayer: 'X',
