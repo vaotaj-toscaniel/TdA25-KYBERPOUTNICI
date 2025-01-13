@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <header>
-      <img class="logo" src="/TDA-logo2.png" alt="TDA-logo">
+      <img class="logo" src="img/TDA-logo2.png" alt="TDA-logo">
       <h1>Piškvorky</h1>
     </header>
     <main>
@@ -14,56 +14,109 @@
               class="cell"
               @click="handleCellClick(rowIndex, colIndex)"
             >
-              <img v-if="cell" :src="cell === 'X' ? '/X_cervene.png' : '/O_modre.png'" :alt="cell" class="player-image" />
+              <img v-if="cell" :src="cell === 'X' ? 'img/X_cervene.png' : 'img/O_modre.png'" :alt="cell" class="player-image" />
             </div>
           </div>
         </div>
         <button @click="resetGame" class="reset-button">Restartovat hru</button>
         <div class="game-status">{{ gameStatus }}</div>
+        <button @click="createGame" class="reset-button">Vytvořit novou hru</button>
+        <button @click="deleteGame" class="reset-button">Smazat hru</button>
       </div>
     </main>
     <footer>
-      <img src="/TDA-logo3.png" alt="logo">
+      <img src="img/TDA-logo3.png" alt="logo">
     </footer>
   </div>
 </template>
 
 <script>
-// import { supabase } from '../../utils/supabase'; 
-// Momentálně způsobuje error
-import { useFetch } from '#app'
+import axios from 'axios';
+
 export default {
   data() {
-    const { data, error } = await useFetch('https://1e7b95c5.app.deploy.tourde.app/game')
-    console.log("data her", data);
-    if (error.value) {
-      console.error('Error fetching data:', error.value)
-    }    
-
-const { data, error } = await useFetch('https://api.example.com/data')
-
-if (error.value) {
-  console.error('Error fetching data:', error.value)
-}
     return {
       boardSize: 15,
       currentPlayer: 'X',
       board: [],
       gameStatus: 'Hra začala! X začíná!',
-      gameId: this.$route.params.id // ID hry z URL
+      gameId: null, // ID hry z backendu
     };
   },
   methods: {
-    createBoard() {
-      this.board = Array.from({ length: this.boardSize }, () => Array(this.boardSize).fill(null));
+    // Vytvoření nové hry (POST)
+    async createGame() {
+      const newGame = {
+        name: 'Moje první hra',  // jméno hry můžeš přizpůsobit
+        difficulty: 'medium',  // přizpůsobit obtížnost, pokud je potřeba
+        board: this.board,  // posíláme počáteční herní desku
+      };
+
+      try {
+        const response = await axios.post('http://localhost:3000/api/game', newGame);
+        this.gameId = response.data.uuid;  // Uložení ID hry pro pozdější operace
+        this.gameStatus = 'Hra byla vytvořena!';
+      } catch (error) {
+        console.error('Chyba při vytváření hry:', error);
+        this.gameStatus = 'Chyba při vytváření hry!';
+      }
     },
-    async handleCellClick(row, col) {
+
+    // Načtení hry podle UUID (GET)
+    async getGame() {
+      if (!this.gameId) {
+        this.gameStatus = 'Musíte nejprve vytvořit hru.';
+        return;
+      }
+
+      try {
+        const response = await axios.get(`http://localhost:3000/api/game/${this.gameId}`);
+        this.board = response.data.board;
+        this.gameStatus = `Hra byla načtena: ${response.data.name}`;
+      } catch (error) {
+        console.error('Chyba při načítání hry:', error);
+        this.gameStatus = 'Chyba při načítání hry!';
+      }
+    },
+
+    // Aktualizace hry (PUT)
+    async updateGame() {
+      const updatedGame = {
+        board: this.board,
+        currentPlayer: this.currentPlayer,
+      };
+
+      try {
+        await axios.put(`http://localhost:3000/api/game/${this.gameId}`, updatedGame);
+        this.gameStatus = 'Hra byla aktualizována!';
+      } catch (error) {
+        console.error('Chyba při aktualizaci hry:', error);
+        this.gameStatus = 'Chyba při aktualizaci hry!';
+      }
+    },
+
+    // Smazání hry (DELETE)
+    async deleteGame() {
+      if (!this.gameId) {
+        this.gameStatus = 'Nemáte žádnou hru k odstranění.';
+        return;
+      }
+
+      try {
+        await axios.delete(`http://localhost:3000/api/game/${this.gameId}`);
+        this.gameStatus = 'Hra byla smazána!';
+        this.gameId = null;
+      } catch (error) {
+        console.error('Chyba při mazání hry:', error);
+        this.gameStatus = 'Chyba při mazání hry!';
+      }
+    },
+
+    handleCellClick(row, col) {
       if (this.board[row][col] || this.gameStatus.includes('vyhrál') || this.gameStatus.includes('remíza')) return;
 
-      // Aktualizujeme herní desku
       this.board[row][col] = this.currentPlayer;
 
-      // Kontrola vítěze nebo remízy
       if (this.checkWinner(row, col)) {
         this.gameStatus = `Hráč ${this.currentPlayer} vyhrál!`;
       } else if (this.board.flat().every(cell => cell)) {
@@ -72,29 +125,8 @@ if (error.value) {
         this.currentPlayer = this.currentPlayer === 'X' ? 'O' : 'X';
         this.gameStatus = `${this.currentPlayer} je na řadě!`;
       }
+    },
 
-      // Uložení stavu hry do Supabase
-      await this.saveGameState();
-    },
-    async saveGameState() {
-      const { data, error } = await supabase
-        .from('games')
-        .upsert([
-          {
-            uuid: this.gameId,
-            board: this.board,
-            gameState: this.gameStatus,
-            currentPlayer: this.currentPlayer,
-            updatedAt: new Date().toISOString()
-          }
-        ]);
-      
-      if (error) {
-        console.error('Chyba při ukládání stavu hry:', error.message);
-      } else {
-        console.log('Stav hry byl uložen do Supabase');
-      }
-    },
     checkWinner(row, col) {
       const directions = [
         [0, 1], [1, 0], [1, 1], [1, -1]
@@ -135,34 +167,20 @@ if (error.value) {
       }
       return false;
     },
+
     resetGame() {
       this.createBoard();
       this.currentPlayer = 'X';
       this.gameStatus = 'Hra začala! X začíná!';
-      this.saveGameState();
+    },
+
+    createBoard() {
+      this.board = Array.from({ length: this.boardSize }, () => Array(this.boardSize).fill(null));
     }
   },
+
   mounted() {
     this.createBoard();
-    this.loadGame();
-  },
-  methods: {
-    async loadGame() {
-      const gameId = this.$route.params.id;
-      const { data, error } = await supabase
-        .from('games')
-        .select('*')
-        .eq('uuid', gameId)
-        .single();
-
-      if (error) {
-        console.error('Chyba při načítání hry:', error.message);
-      } else {
-        this.board = data.board;
-        this.currentPlayer = data.currentPlayer;
-        this.gameStatus = data.gameState;
-      }
-    }
   }
 };
 </script>
