@@ -9,8 +9,8 @@
         <div class="board">
           <div v-for="(row, rowIndex) in board" :key="rowIndex">
             <div
-              v-for="(cell, colIndex) in row" 
-              :key="colIndex" 
+              v-for="(cell, colIndex) in row"
+              :key="colIndex"
               class="cell"
               @click="handleCellClick(rowIndex, colIndex)"
             >
@@ -20,8 +20,6 @@
         </div>
         <button @click="resetGame" class="reset-button">Restartovat hru</button>
         <div class="game-status">{{ gameStatus }}</div>
-        <button @click="createGame" class="reset-button">Vytvořit novou hru</button>
-        <button @click="deleteGame" class="reset-button">Smazat hru</button>
       </div>
     </main>
     <footer>
@@ -39,149 +37,74 @@ export default {
       boardSize: 15,
       currentPlayer: 'X',
       board: [],
+      gameId: null,
       gameStatus: 'Hra začala! X začíná!',
-      gameId: null, // ID hry z backendu
     };
   },
   methods: {
-    // Vytvoření nové hry (POST)
+    async fetchGame() {
+      if (this.gameId) {
+        try {
+          const response = await axios.get(`${process.env.VUE_APP_API_URL}/game/${this.gameId}`);
+          this.board = response.data.board;
+          this.currentPlayer = response.data.currentPlayer;
+          this.gameStatus = `Hráč ${this.currentPlayer} je na řadě!`;
+        } catch (error) {
+          console.error('Chyba při načítání hry:', error);
+          this.gameStatus = 'Chyba při načítání hry!';
+        }
+      }
+    },
+
     async createGame() {
       const newGame = {
-        name: 'Moje první hra',  // jméno hry můžeš přizpůsobit
-        difficulty: 'medium',  // přizpůsobit obtížnost, pokud je potřeba
-        board: this.board,  // posíláme počáteční herní desku
+        board: Array.from({ length: this.boardSize }, () => Array(this.boardSize).fill(null)),
+        currentPlayer: 'X',
       };
 
       try {
-        const response = await axios.post('http://localhost:3000/api/game', newGame);
-        this.gameId = response.data.uuid;  // Uložení ID hry pro pozdější operace
-        this.gameStatus = 'Hra byla vytvořena!';
+        const response = await axios.post(`${process.env.VUE_APP_API_URL}/game`, newGame);
+        this.gameId = response.data.uuid;
+        this.gameStatus = 'Hra byla úspěšně vytvořena!';
       } catch (error) {
         console.error('Chyba při vytváření hry:', error);
         this.gameStatus = 'Chyba při vytváření hry!';
       }
     },
 
-    // Načtení hry podle UUID (GET)
-    async getGame() {
-      if (!this.gameId) {
-        this.gameStatus = 'Musíte nejprve vytvořit hru.';
-        return;
-      }
+    async handleCellClick(row, col) {
+      if (this.board[row][col] || this.gameStatus.includes('vyhrál') || this.gameStatus.includes('remíza')) return;
+
+      this.board[row][col] = this.currentPlayer;
 
       try {
-        const response = await axios.get(`http://localhost:3000/api/game/${this.gameId}`);
-        this.board = response.data.board;
-        this.gameStatus = `Hra byla načtena: ${response.data.name}`;
-      } catch (error) {
-        console.error('Chyba při načítání hry:', error);
-        this.gameStatus = 'Chyba při načítání hry!';
-      }
-    },
-
-    // Aktualizace hry (PUT)
-    async updateGame() {
-      const updatedGame = {
-        board: this.board,
-        currentPlayer: this.currentPlayer,
-      };
-
-      try {
-        await axios.put(`http://localhost:3000/api/game/${this.gameId}`, updatedGame);
-        this.gameStatus = 'Hra byla aktualizována!';
+        const response = await axios.put(`${process.env.VUE_APP_API_URL}/game/${this.gameId}`, {
+          board: this.board,
+          currentPlayer: this.currentPlayer === 'X' ? 'O' : 'X',
+        });
+        if (response.data) {
+          this.fetchGame();
+        }
       } catch (error) {
         console.error('Chyba při aktualizaci hry:', error);
         this.gameStatus = 'Chyba při aktualizaci hry!';
       }
     },
 
-    // Smazání hry (DELETE)
-    async deleteGame() {
-      if (!this.gameId) {
-        this.gameStatus = 'Nemáte žádnou hru k odstranění.';
-        return;
-      }
-
-      try {
-        await axios.delete(`http://localhost:3000/api/game/${this.gameId}`);
-        this.gameStatus = 'Hra byla smazána!';
-        this.gameId = null;
-      } catch (error) {
-        console.error('Chyba při mazání hry:', error);
-        this.gameStatus = 'Chyba při mazání hry!';
-      }
+    async resetGame() {
+      this.createGame();
     },
-
-    handleCellClick(row, col) {
-      if (this.board[row][col] || this.gameStatus.includes('vyhrál') || this.gameStatus.includes('remíza')) return;
-
-      this.board[row][col] = this.currentPlayer;
-
-      if (this.checkWinner(row, col)) {
-        this.gameStatus = `Hráč ${this.currentPlayer} vyhrál!`;
-      } else if (this.board.flat().every(cell => cell)) {
-        this.gameStatus = 'Je to remíza!';
-      } else {
-        this.currentPlayer = this.currentPlayer === 'X' ? 'O' : 'X';
-        this.gameStatus = `${this.currentPlayer} je na řadě!`;
-      }
-    },
-
-    checkWinner(row, col) {
-      const directions = [
-        [0, 1], [1, 0], [1, 1], [1, -1]
-      ];
-
-      for (const [dx, dy] of directions) {
-        let count = 1;
-
-        for (let i = 1; i < 5; i++) {
-          const newRow = row + i * dx;
-          const newCol = col + i * dy;
-          if (
-            newRow >= 0 && newRow < this.boardSize &&
-            newCol >= 0 && newCol < this.boardSize &&
-            this.board[newRow][newCol] === this.currentPlayer
-          ) {
-            count++;
-          } else {
-            break;
-          }
-        }
-
-        for (let i = 1; i < 5; i++) {
-          const newRow = row - i * dx;
-          const newCol = col - i * dy;
-          if (
-            newRow >= 0 && newRow < this.boardSize &&
-            newCol >= 0 && newCol < this.boardSize &&
-            this.board[newRow][newCol] === this.currentPlayer
-          ) {
-            count++;
-          } else {
-            break;
-          }
-        }
-
-        if (count >= 5) return true;
-      }
-      return false;
-    },
-
-    resetGame() {
-      this.createBoard();
-      this.currentPlayer = 'X';
-      this.gameStatus = 'Hra začala! X začíná!';
-    },
-
-    createBoard() {
-      this.board = Array.from({ length: this.boardSize }, () => Array(this.boardSize).fill(null));
-    }
   },
 
   mounted() {
-    this.createBoard();
-  }
+    const gameId = this.$route.params.id;
+    if (gameId) {
+      this.gameId = gameId;
+      this.fetchGame();
+    } else {
+      this.createGame();
+    }
+  },
 };
 </script>
 
@@ -225,7 +148,7 @@ header .logo {
   grid-template-columns: repeat(15, 1fr);
   grid-template-rows: repeat(15, 1fr);
   gap: 5px;
-  width: 500px; 
+  width: 500px;
   height: 500px;
   margin: 50px auto;
   border: 10px solid #0070BB;
