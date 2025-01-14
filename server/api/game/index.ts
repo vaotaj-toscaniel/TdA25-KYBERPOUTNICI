@@ -1,5 +1,5 @@
 import { H3Event, sendError } from 'h3';
-import supabase from '~/server/utils/supabase';
+// import supabase from '~/server/utils/supabase';
 
 export default defineEventHandler(async (event: H3Event) => {
   const method = event.node.req.method;

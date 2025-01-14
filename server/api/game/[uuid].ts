@@ -1,14 +1,14 @@
 import { H3Event, sendError } from 'h3';
-import supabase from '~/server/utils/supabase';
+// import supabase from '~/server/utils/supabase';
 
 export default defineEventHandler(async (event: H3Event) => {
   const uuid = event.context.params?.uuid;
 
   switch (event.node.req.method) {
     case 'GET':
-      return await getGameById(event, uuid);
+      // return await getGameById(event, uuid);
     case 'PUT':
-      return await updateGame(event, uuid);
+      // return await updateGame(event, uuid);
     default:
       return sendError(event, createError({ statusCode: 405, statusMessage: 'Method Not Allowed' }));
   }
