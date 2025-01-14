@@ -34,17 +34,33 @@
 import { useFetch } from '#app'
 export default {
   data() {
-    const { data, error } = await useFetch('https://1e7b95c5.app.deploy.tourde.app/game')
-    console.log("data her", data);
-    if (error.value) {
-      console.error('Error fetching data:', error.value)
-    }    
+    return {
+      fetchedData1: null, // Data z prvního API
+      fetchedData2: null, // Data z druhého API
+      fetchError1: null,  // Chyba z prvního API
+      fetchError2: null   // Chyba z druhého API
+    };
+  },
+  async mounted() {
+    // Načtení prvního API
+    const { data: data1, error: error1 } = await useFetch('https://1e7b95c5.app.deploy.tourde.app/game');
+    if (error1.value) {
+      console.error('Error fetching data from game API:', error1.value);
+      this.fetchError1 = error1.value;
+    } else {
+      console.log('Data from game API:', data1);
+      this.fetchedData1 = data1;
+    }
 
-const { data, error } = await useFetch('https://api.example.com/data')
-
-if (error.value) {
-  console.error('Error fetching data:', error.value)
-}
+    // Načtení druhého API
+    const { data: data2, error: error2 } = await useFetch('https://api.example.com/data');
+    if (error2.value) {
+      console.error('Error fetching data from example API:', error2.value);
+      this.fetchError2 = error2.value;
+    } else {
+      console.log('Data from example API:', data2);
+      this.fetchedData2 = data2;
+    }
     return {
       boardSize: 15,
       currentPlayer: 'X',
