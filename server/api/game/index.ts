@@ -1,5 +1,5 @@
-import { H3Event, sendError } from 'h3';
-// import supabase from '~/server/utils/supabase';
+import { H3Event, sendError, createError } from 'h3';
+import supabase from '~/server/utils/supabase';
 
 export default defineEventHandler(async (event: H3Event) => {
   const method = event.node.req.method;
@@ -18,7 +18,7 @@ export default defineEventHandler(async (event: H3Event) => {
 async function createGame(event: H3Event) {
   const body = await readBody(event);
 
-  const { error, data } = await supabase
+  const { data, error } = await supabase
     .from('games')
     .insert([body]);
 
