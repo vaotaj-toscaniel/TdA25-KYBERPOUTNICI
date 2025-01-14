@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <header>
-      <img class="logo" src="/TDA-logo2.png" alt="TDA-logo">
+      <img class="logo" src="img/TDA-logo2.png" alt="TDA-logo">
       <h1>Piškvorky</h1>
     </header>
     <main>
@@ -9,12 +9,12 @@
         <div class="board">
           <div v-for="(row, rowIndex) in board" :key="rowIndex">
             <div
-              v-for="(cell, colIndex) in row" 
-              :key="colIndex" 
+              v-for="(cell, colIndex) in row"
+              :key="colIndex"
               class="cell"
               @click="handleCellClick(rowIndex, colIndex)"
             >
-              <img v-if="cell" :src="cell === 'X' ? '/X_cervene.png' : '/O_modre.png'" :alt="cell" class="player-image" />
+              <img v-if="cell" :src="cell === 'X' ? 'img/X_cervene.png' : 'img/O_modre.png'" :alt="cell" class="player-image" />
             </div>
           </div>
         </div>
@@ -23,15 +23,14 @@
       </div>
     </main>
     <footer>
-      <img src="/TDA-logo3.png" alt="logo">
+      <img src="img/TDA-logo3.png" alt="logo">
     </footer>
   </div>
 </template>
 
 <script>
-// import { supabase } from '../../utils/supabase'; 
-// Momentálně způsobuje error
-import { useFetch } from '#app'
+import axios from 'axios';
+
 export default {
   data() {
     return {
@@ -65,121 +64,74 @@ export default {
       boardSize: 15,
       currentPlayer: 'X',
       board: [],
+      gameId: null,
       gameStatus: 'Hra začala! X začíná!',
-      gameId: this.$route.params.id // ID hry z URL
     };
   },
   methods: {
-    createBoard() {
-      this.board = Array.from({ length: this.boardSize }, () => Array(this.boardSize).fill(null));
+    async fetchGame() {
+      if (this.gameId) {
+        try {
+          const response = await axios.get(`${process.env.VUE_APP_API_URL}/game/${this.gameId}`);
+          this.board = response.data.board;
+          this.currentPlayer = response.data.currentPlayer;
+          this.gameStatus = `Hráč ${this.currentPlayer} je na řadě!`;
+        } catch (error) {
+          console.error('Chyba při načítání hry:', error);
+          this.gameStatus = 'Chyba při načítání hry!';
+        }
+      }
     },
+
+    async createGame() {
+      const newGame = {
+        board: Array.from({ length: this.boardSize }, () => Array(this.boardSize).fill(null)),
+        currentPlayer: 'X',
+      };
+
+      try {
+        const response = await axios.post(`${process.env.VUE_APP_API_URL}/game`, newGame);
+        this.gameId = response.data.uuid;
+        this.gameStatus = 'Hra byla úspěšně vytvořena!';
+      } catch (error) {
+        console.error('Chyba při vytváření hry:', error);
+        this.gameStatus = 'Chyba při vytváření hry!';
+      }
+    },
+
     async handleCellClick(row, col) {
       if (this.board[row][col] || this.gameStatus.includes('vyhrál') || this.gameStatus.includes('remíza')) return;
 
-      // Aktualizujeme herní desku
       this.board[row][col] = this.currentPlayer;
 
-      // Kontrola vítěze nebo remízy
-      if (this.checkWinner(row, col)) {
-        this.gameStatus = `Hráč ${this.currentPlayer} vyhrál!`;
-      } else if (this.board.flat().every(cell => cell)) {
-        this.gameStatus = 'Je to remíza!';
-      } else {
-        this.currentPlayer = this.currentPlayer === 'X' ? 'O' : 'X';
-        this.gameStatus = `${this.currentPlayer} je na řadě!`;
-      }
-
-      // Uložení stavu hry do Supabase
-      await this.saveGameState();
-    },
-    async saveGameState() {
-      const { data, error } = await supabase
-        .from('games')
-        .upsert([
-          {
-            uuid: this.gameId,
-            board: this.board,
-            gameState: this.gameStatus,
-            currentPlayer: this.currentPlayer,
-            updatedAt: new Date().toISOString()
-          }
-        ]);
-      
-      if (error) {
-        console.error('Chyba při ukládání stavu hry:', error.message);
-      } else {
-        console.log('Stav hry byl uložen do Supabase');
-      }
-    },
-    checkWinner(row, col) {
-      const directions = [
-        [0, 1], [1, 0], [1, 1], [1, -1]
-      ];
-
-      for (const [dx, dy] of directions) {
-        let count = 1;
-
-        for (let i = 1; i < 5; i++) {
-          const newRow = row + i * dx;
-          const newCol = col + i * dy;
-          if (
-            newRow >= 0 && newRow < this.boardSize &&
-            newCol >= 0 && newCol < this.boardSize &&
-            this.board[newRow][newCol] === this.currentPlayer
-          ) {
-            count++;
-          } else {
-            break;
-          }
+      try {
+        const response = await axios.put(`${process.env.VUE_APP_API_URL}/game/${this.gameId}`, {
+          board: this.board,
+          currentPlayer: this.currentPlayer === 'X' ? 'O' : 'X',
+        });
+        if (response.data) {
+          this.fetchGame();
         }
-
-        for (let i = 1; i < 5; i++) {
-          const newRow = row - i * dx;
-          const newCol = col - i * dy;
-          if (
-            newRow >= 0 && newRow < this.boardSize &&
-            newCol >= 0 && newCol < this.boardSize &&
-            this.board[newRow][newCol] === this.currentPlayer
-          ) {
-            count++;
-          } else {
-            break;
-          }
-        }
-
-        if (count >= 5) return true;
+      } catch (error) {
+        console.error('Chyba při aktualizaci hry:', error);
+        this.gameStatus = 'Chyba při aktualizaci hry!';
       }
-      return false;
     },
-    resetGame() {
-      this.createBoard();
-      this.currentPlayer = 'X';
-      this.gameStatus = 'Hra začala! X začíná!';
-      this.saveGameState();
-    }
+
+    async resetGame() {
+      this.createGame();
+    },
   },
+
   mounted() {
-    this.createBoard();
-    this.loadGame();
-  },
-  methods: {
-    async loadGame() {
-      const gameId = this.$route.params.id;
-      const { data, error } = await supabase
-        .from('games')
-        .select('*')
-        .eq('uuid', gameId)
-        .single();
-
-      if (error) {
-        console.error('Chyba při načítání hry:', error.message);
-      } else {
-        this.board = data.board;
-        this.currentPlayer = data.currentPlayer;
-        this.gameStatus = data.gameState;
-      }
+    const gameId = this.$route.params.id;
+    if (gameId) {
+      this.gameId = gameId;
+      this.fetchGame();
+    } else {
+      this.createGame();
     }
-  }
+  },
 };
 </script>
 
@@ -223,7 +175,7 @@ header .logo {
   grid-template-columns: repeat(15, 1fr);
   grid-template-rows: repeat(15, 1fr);
   gap: 5px;
-  width: 500px; 
+  width: 500px;
   height: 500px;
   margin: 50px auto;
   border: 10px solid #0070BB;
