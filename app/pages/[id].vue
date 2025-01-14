@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <header>
-      <img class="logo" src="img/TDA-logo2.png" alt="TDA-logo">
+      <img class="logo" src="/TDA-logo2.png" alt="TDA-logo">
       <h1>Piškvorky</h1>
     </header>
     <main>
@@ -14,7 +14,7 @@
               class="cell"
               @click="handleCellClick(rowIndex, colIndex)"
             >
-              <img v-if="cell" :src="cell === 'X' ? 'img/X_cervene.png' : 'img/O_modre.png'" :alt="cell" class="player-image" />
+              <img v-if="cell" :src="cell === 'X' ? '/X_cervene.png' : '/O_modre.png'" :alt="cell" class="player-image" />
             </div>
           </div>
         </div>
@@ -23,13 +23,13 @@
       </div>
     </main>
     <footer>
-      <img src="img/TDA-logo3.png" alt="logo">
+      <img src="/TDA-logo3.png" alt="logo">
     </footer>
   </div>
 </template>
 
 <script>
-import axios from 'axios';
+// import axios from 'axios';
 
 export default {
   data() {
